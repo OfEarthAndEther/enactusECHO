@@ -1,25 +1,37 @@
-import { useEffect, useState } from 'react';
-import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/AuthContext';
-import { useUserRole } from '@/hooks/useUserRole';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { CheckCircle, XCircle, Clock, FileText } from 'lucide-react';
-import { getWasteTypeLabel } from '@/utils/pointsCalculator';
-import { format } from 'date-fns';
-import { VerifySubmissionDialog } from '@/components/VerifySubmissionDialog';
-import { Navigate } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { CheckCircle, XCircle, Clock, FileText } from "lucide-react";
+import { getWasteTypeLabel } from "@/utils/pointsCalculator";
+import { format } from "date-fns";
+import { VerifySubmissionDialog } from "@/components/VerifySubmissionDialog";
+import { Navigate } from "react-router-dom";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
   const { isAdmin, loading: roleLoading } = useUserRole();
   const [pendingSubmissions, setPendingSubmissions] = useState<any[]>([]);
-  const [stats, setStats] = useState({ total: 0, pending: 0, verified: 0, rejected: 0 });
+  const [stats, setStats] = useState({
+    total: 0,
+    pending: 0,
+    verified: 0,
+    rejected: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [selectedSubmission, setSelectedSubmission] = useState<any>(null);
 
@@ -33,34 +45,42 @@ export default function AdminDashboard() {
     try {
       // Fetch all submissions for stats
       const { data: allSubmissions, error: allError } = await supabase
-        .from('submissions')
-        .select('verification_status');
+        .from("submissions")
+        .select("verification_status");
 
       if (allError) throw allError;
 
       const stats = {
         total: allSubmissions?.length || 0,
-        pending: allSubmissions?.filter(s => s.verification_status === 'pending').length || 0,
-        verified: allSubmissions?.filter(s => s.verification_status === 'verified').length || 0,
-        rejected: allSubmissions?.filter(s => s.verification_status === 'rejected').length || 0,
+        pending:
+          allSubmissions?.filter((s) => s.verification_status === "pending")
+            .length || 0,
+        verified:
+          allSubmissions?.filter((s) => s.verification_status === "verified")
+            .length || 0,
+        rejected:
+          allSubmissions?.filter((s) => s.verification_status === "rejected")
+            .length || 0,
       };
       setStats(stats);
 
       // Fetch pending submissions with user details
       const { data: pending, error: pendingError } = await supabase
-        .from('submissions')
-        .select(`
+        .from("submissions")
+        .select(
+          `
           *,
           bins (name),
           profiles (full_name, college_id)
-        `)
-        .eq('verification_status', 'pending')
-        .order('created_at', { ascending: true });
+        `
+        )
+        .eq("verification_status", "pending")
+        .order("created_at", { ascending: true });
 
       if (pendingError) throw pendingError;
       setPendingSubmissions(pending || []);
     } catch (error: any) {
-      toast.error('Failed to load admin data');
+      toast.error("Failed to load admin data");
     } finally {
       setLoading(false);
     }
@@ -81,18 +101,22 @@ export default function AdminDashboard() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
-      
+
       <main className="flex-1 container px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Review and verify e-waste submissions</p>
+          <p className="text-muted-foreground">
+            Review and verify e-waste submissions
+          </p>
         </div>
 
         {/* Stats Cards */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
           <Card className="border-2">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total Submissions</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Total Submissions
+              </CardTitle>
               <FileText className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -106,7 +130,9 @@ export default function AdminDashboard() {
               <Clock className="h-4 w-4 text-amber-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-amber-500">{stats.pending}</div>
+              <div className="text-3xl font-bold text-amber-500">
+                {stats.pending}
+              </div>
             </CardContent>
           </Card>
 
@@ -116,7 +142,9 @@ export default function AdminDashboard() {
               <CheckCircle className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-green-500">{stats.verified}</div>
+              <div className="text-3xl font-bold text-green-500">
+                {stats.verified}
+              </div>
             </CardContent>
           </Card>
 
@@ -126,7 +154,9 @@ export default function AdminDashboard() {
               <XCircle className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-red-500">{stats.rejected}</div>
+              <div className="text-3xl font-bold text-red-500">
+                {stats.rejected}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -160,13 +190,26 @@ export default function AdminDashboard() {
                   <TableBody>
                     {pendingSubmissions.map((submission) => (
                       <TableRow key={submission.id}>
-                        <TableCell>{format(new Date(submission.created_at), 'MMM dd, yyyy')}</TableCell>
+                        <TableCell>
+                          {format(
+                            new Date(submission.created_at),
+                            "MMM dd, yyyy"
+                          )}
+                        </TableCell>
                         <TableCell>{submission.profiles?.full_name}</TableCell>
-                        <TableCell className="font-mono text-xs">{submission.profiles?.college_id}</TableCell>
-                        <TableCell>{getWasteTypeLabel(submission.waste_type)}</TableCell>
-                        <TableCell>{submission.quantity} {submission.unit}</TableCell>
-                        <TableCell>{submission.bins?.name || 'N/A'}</TableCell>
-                        <TableCell className="font-semibold">{submission.points_earned}</TableCell>
+                        <TableCell className="font-mono text-xs">
+                          {submission.profiles?.college_id}
+                        </TableCell>
+                        <TableCell>
+                          {getWasteTypeLabel(submission.waste_type)}
+                        </TableCell>
+                        <TableCell>
+                          {submission.quantity} {submission.unit}
+                        </TableCell>
+                        <TableCell>{submission.bins?.name || "N/A"}</TableCell>
+                        <TableCell className="font-semibold">
+                          {submission.points_earned}
+                        </TableCell>
                         <TableCell>
                           <Button
                             size="sm"

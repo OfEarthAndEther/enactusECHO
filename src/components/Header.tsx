@@ -1,44 +1,49 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Menu, X, LogOut, LayoutDashboard } from 'lucide-react';
-import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Menu, X, LogOut, LayoutDashboard } from "lucide-react";
+import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { isAdmin, loading: roleLoading } = useUserRole();
 
   const handleSignOut = async () => {
     await signOut();
     setMobileMenuOpen(false);
   };
-
   const navLinks = [
-    { to: '/', label: 'Home' },
-    { to: '/about', label: 'About' },
+    { to: "/", label: "Home" },
+    { to: "/about", label: "About" },
   ];
 
   return (
     <header
       className="shadow-md"
       style={{
-        background: 'linear-gradient(90deg, #99bf99 0%, #8fb78f 100%)',
-        borderBottom: '2px solid #28536B',
+        background: "linear-gradient(90deg, #99bf99 0%, #8fb78f 100%)",
+        borderBottom: "2px solid #28536B",
       }}
     >
       <nav className="container mx-auto flex items-center justify-between py-4 px-6">
         {/* Logo */}
         <div
           className="text-3xl font-bold eb-garamond-headline"
-          style={{ color: '#28536B', fontFamily: 'EB Garamond, serif', fontWeight: 700 }}
+          style={{
+            color: "#28536B",
+            fontFamily: "EB Garamond, serif",
+            fontWeight: 700,
+          }}
         >
           ECHO
         </div>
 
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-6">
-          {navLinks.map(link => (
+          {navLinks.map((link) => (
             <Link
               key={link.to}
               to={link.to}
@@ -53,12 +58,25 @@ export function Header() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate("/dashboard")}
                 className="gap-2"
               >
                 <LayoutDashboard className="h-4 w-4" />
-                Dashboard
+                Submissions
               </Button>
+              {isAdmin ? (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => navigate("/admin")}
+                  className="gap-2"
+                >
+                  <LayoutDashboard className="h-4 w-4" />
+                  Verifications
+                </Button>
+              ) : (
+                <></>
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -71,12 +89,16 @@ export function Header() {
             </>
           ) : (
             <>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/auth/login')}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/auth/login")}
+              >
                 Login
               </Button>
               <Button
                 size="sm"
-                onClick={() => navigate('/auth/signup')}
+                onClick={() => navigate("/auth/signup")}
                 className="bg-gradient-to-r from-primary to-primary-light"
               >
                 Sign Up
@@ -91,7 +113,11 @@ export function Header() {
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Toggle menu"
         >
-          {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          {mobileMenuOpen ? (
+            <X className="h-6 w-6" />
+          ) : (
+            <Menu className="h-6 w-6" />
+          )}
         </button>
       </nav>
 
@@ -99,7 +125,7 @@ export function Header() {
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-border/40 bg-background/95 backdrop-blur">
           <div className="container px-4 py-4 space-y-3">
-            {navLinks.map(link => (
+            {navLinks.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
@@ -116,14 +142,30 @@ export function Header() {
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    navigate('/dashboard');
+                    navigate("/dashboard");
                     setMobileMenuOpen(false);
                   }}
                   className="w-full justify-start gap-2"
                 >
                   <LayoutDashboard className="h-4 w-4" />
-                  Dashboard
+                  Submissions
                 </Button>
+                {isAdmin ? (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      navigate("/dashboard");
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full justify-start gap-2"
+                  >
+                    <LayoutDashboard className="h-4 w-4" />
+                    Verifications
+                  </Button>
+                ) : (
+                  <></>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
@@ -140,7 +182,7 @@ export function Header() {
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    navigate('/auth/login');
+                    navigate("/auth/login");
                     setMobileMenuOpen(false);
                   }}
                   className="w-full"
@@ -150,7 +192,7 @@ export function Header() {
                 <Button
                   size="sm"
                   onClick={() => {
-                    navigate('/auth/signup');
+                    navigate("/auth/signup");
                     setMobileMenuOpen(false);
                   }}
                   className="w-full bg-gradient-to-r from-primary to-primary-light"
