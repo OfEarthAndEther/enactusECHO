@@ -30,22 +30,18 @@ export function Header() {
     <header
       className="shadow-md"
       style={{
-        backgroundImage: "url('/src/assets/navbar.png')",
-        backgroundRepeat: "no-repeat",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
+        background: "linear-gradient(90deg, #99bf99 0%, #8fb78f 100%)",
         borderBottom: "2px solid #28536B",
-        overflow: "hidden",
       }}
     >
       <nav className="container mx-auto flex items-center justify-between py-4 px-6">
         {/* Logo */}
         <div
-          className="text-3xl font-bold"
+          className="text-3xl font-bold eb-garamond-headline"
           style={{
-            color: "#E7F5DC",
-            fontFamily: "Barabara, serif",
-            fontWeight: 900,
+            color: "#28536B",
+            fontFamily: "EB Garamond, serif",
+            fontWeight: 700,
           }}
         >
           ECHO
@@ -57,8 +53,7 @@ export function Header() {
             <Link
               key={link.to}
               to={link.to}
-              className="text-sm font-medium transition-colors"
-              style={{ color: "#fff" }}
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               {link.label}
             </Link>
@@ -70,16 +65,7 @@ export function Header() {
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate("/dashboard")}
-                className="gap-2 from-primary to-primary-light"
-                style={{ color: "#fff", background: "none", boxShadow: "none" }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.background = "none";
-                  e.currentTarget.style.boxShadow = "none";
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.background = "none";
-                  e.currentTarget.style.boxShadow = "none";
-                }}
+                className="gap-2"
               >
                 <LayoutDashboard className="h-4 w-4" />
                 Submissions
@@ -138,8 +124,7 @@ export function Header() {
 
         {/* Mobile Menu Button */}
         <button
-          className="block py-2 text-sm font-medium transition-colors"
-          style={{ color: "#fff" }}
+          className="md:hidden p-2"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Toggle menu"
         >
@@ -159,8 +144,7 @@ export function Header() {
               <Link
                 key={link.to}
                 to={link.to}
-                className="block py-2 text-sm font-medium transition-colors"
-                style={{ color: "#fff" }}
+                className="block py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {link.label}
@@ -177,19 +161,6 @@ export function Header() {
                     setMobileMenuOpen(false);
                   }}
                   className="w-full justify-start gap-2"
-                  style={{
-                    color: "#fff",
-                    background: "none",
-                    boxShadow: "none",
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.background = "none";
-                    e.currentTarget.style.boxShadow = "none";
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.background = "none";
-                    e.currentTarget.style.boxShadow = "none";
-                  }}
                 >
                   <LayoutDashboard className="h-4 w-4" />
                   Submissions

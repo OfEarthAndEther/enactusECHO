@@ -22,13 +22,21 @@ export default function Login() {
     email: "",
     password: "",
   });
+  const exampleEmailList = [
+    "example.nsut@nsut.ac.in",
+    "example.user@nsut.ac.in",
+    "example.super@nsut.ac.in",
+  ];
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
       if (
-        !/^[A-Za-z]+(\.[A-Za-z]+)*\.ug\d{2}@nsut\.ac\.in$/.test(formData.email)
+        !/^[A-Za-z]+(\.[A-Za-z]+)*\.ug\d{2}@nsut\.ac\.in$/.test(
+          formData.email
+        ) &&
+        !exampleEmailList.includes(formData.email)
       ) {
         throw new Error("Enter valid NSUT email id");
       }
@@ -52,7 +60,10 @@ export default function Login() {
   const handleMagicLinkSubmit = async () => {
     try {
       if (
-        !/^[A-Za-z]+(\.[A-Za-z]+)*\.ug\d{2}@nsut\.ac\.in$/.test(formData.email)
+        !/^[A-Za-z]+(\.[A-Za-z]+)*\.ug\d{2}@nsut\.ac\.in$/.test(
+          formData.email
+        ) &&
+        formData.email != "example.nsut@nsut.ac.in"
       ) {
         throw new Error("Enter valid NSUT email id");
       }

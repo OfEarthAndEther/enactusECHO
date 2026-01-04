@@ -82,12 +82,45 @@ CREATE TABLE public.partners (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Create vouchers table
+create table public.vouchers (
+  id uuid not null default gen_random_uuid (),
+  quantity numeric(10, 2) not null,
+  name text null,
+  description text null,
+  points numeric not null default '0'::numeric,
+  constraint vouchers_pkey primary key (id),
+  constraint positive_quantity check ((quantity > (0)::numeric))
+) TABLESPACE pg_default;
+
+-- Create codes table
+create table public."availableCodes" (
+  name text null,
+  code text null,
+  valid_till date not null
+) TABLESPACE pg_default;
+
+-- Create redeemed table
+create table public.redeemed (
+  id uuid not null default gen_random_uuid (),
+  voucher_name text null,
+  code text null,
+  user_id uuid null,
+  description text null,
+  valid_till date null,
+  constraint redeemed_pkey primary key (id),
+  constraint redeemed_user_id_fkey foreign KEY (user_id) references profiles (id)
+) TABLESPACE pg_default;
+
 -- Enable RLS on all tables
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bins ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.submissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.partners ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.redeemed ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.codes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.vouchers ENABLE ROW LEVEL SECURITY;
 
 -- Create security definer function to check roles
 CREATE OR REPLACE FUNCTION public.has_role(_user_id UUID, _role app_role)
@@ -156,6 +189,41 @@ CREATE POLICY "Admins can verify submissions"
 CREATE POLICY "Anyone can view partners"
   ON public.partners FOR SELECT
   USING (true);
+
+-- RLS Policies for availableCodes
+CREATE POLICY "Users can view a code"
+  ON public.availableCodes FOR SELECT TO authenticated
+  USING (true);
+
+CREATE POLICY "Users can delete a code"
+  ON public.availableCodes FOR DELETE TO authenticated
+  USING (true);
+
+-- RLS Policies for vouchers
+CREATE POLICY "Users can view a voucher"
+  ON public.vouchers FOR SELECT TO authenticated
+  USING (true);
+
+CREATE POLICY "Users can delete a voucher"
+  ON public.vouchers FOR DELETE TO authenticated
+  USING (true);
+
+CREATE POLICY "Users can update a voucher"
+  ON public.vouchers FOR UPDATE TO authenticated
+  USING (true);
+
+-- RLS Policies for redeemed
+CREATE POLICY "Users can redeem new vouchers"
+  ON public.redeemed FOR INSERT TO authenticated
+  USING (true);
+
+CREATE POLICY "Users can view their redeeemd vouchers"
+  ON public.redeemed FOR SELECT TO authenticated
+  USING (auth.uid() = user_id);
+
+--Allow users to only update the quantity column of vouchers
+REVOKE UPDATE ON TABLE public.vouchers FROM authenticated;
+GRANT UPDATE (quantity) ON TABLE public.vouchers TO authenticated;
 
 -- Trigger to create profile on signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
