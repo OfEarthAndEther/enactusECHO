@@ -53,7 +53,8 @@ export function Header() {
             <Link
               key={link.to}
               to={link.to}
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="text-sm font-medium transition-colors"
+              style={{ color: "#fff" }}
             >
               {link.label}
             </Link>
@@ -144,7 +145,8 @@ export function Header() {
               <Link
                 key={link.to}
                 to={link.to}
-                className="block py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+                className="block py-2 text-sm font-medium transition-colors"
+                style={{ color: "#fff" }}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {link.label}
@@ -161,6 +163,19 @@ export function Header() {
                     setMobileMenuOpen(false);
                   }}
                   className="w-full justify-start gap-2"
+                  style={{
+                    color: "#fff",
+                    background: "none",
+                    boxShadow: "none",
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.background = "none";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.background = "none";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
                 >
                   <LayoutDashboard className="h-4 w-4" />
                   Submissions
