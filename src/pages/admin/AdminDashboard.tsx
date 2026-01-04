@@ -188,39 +188,47 @@ export default function AdminDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {pendingSubmissions.map((submission) => (
-                      <TableRow key={submission.id}>
-                        <TableCell>
-                          {format(
-                            new Date(submission.created_at),
-                            "MMM dd, yyyy"
-                          )}
-                        </TableCell>
-                        <TableCell>{submission.profiles?.full_name}</TableCell>
-                        <TableCell className="font-mono text-xs">
-                          {submission.profiles?.college_id}
-                        </TableCell>
-                        <TableCell>
-                          {getWasteTypeLabel(submission.waste_type)}
-                        </TableCell>
-                        <TableCell>
-                          {submission.quantity} {submission.unit}
-                        </TableCell>
-                        <TableCell>{submission.bins?.name || "N/A"}</TableCell>
-                        <TableCell className="font-semibold">
-                          {submission.points_earned}
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setSelectedSubmission(submission)}
-                          >
-                            Review
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {pendingSubmissions
+                      .filter((submissions) => {
+                        return user.id != submissions.user_id;
+                      })
+                      .map((submission) => (
+                        <TableRow key={submission.id}>
+                          <TableCell>
+                            {format(
+                              new Date(submission.created_at),
+                              "MMM dd, yyyy"
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {submission.profiles?.full_name}
+                          </TableCell>
+                          <TableCell className="font-mono text-xs">
+                            {submission.profiles?.college_id}
+                          </TableCell>
+                          <TableCell>
+                            {getWasteTypeLabel(submission.waste_type)}
+                          </TableCell>
+                          <TableCell>
+                            {submission.quantity} {submission.unit}
+                          </TableCell>
+                          <TableCell>
+                            {submission.bins?.name || "N/A"}
+                          </TableCell>
+                          <TableCell className="font-semibold">
+                            {submission.points_earned}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setSelectedSubmission(submission)}
+                            >
+                              Review
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
                   </TableBody>
                 </Table>
               </div>

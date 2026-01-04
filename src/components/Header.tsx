@@ -1,10 +1,16 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogOut, LayoutDashboard } from "lucide-react";
+import {
+  Menu,
+  X,
+  LogOut,
+  LayoutDashboard,
+  CircleCheckBig,
+  Ticket,
+} from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
-
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, signOut } = useAuth();
@@ -64,6 +70,15 @@ export function Header() {
                 <LayoutDashboard className="h-4 w-4" />
                 Submissions
               </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/vouchers")}
+                className="gap-2"
+              >
+                <Ticket className="h-4 w-4" />
+                Vouchers
+              </Button>
               {isAdmin ? (
                 <Button
                   variant="secondary"
@@ -71,7 +86,7 @@ export function Header() {
                   onClick={() => navigate("/admin")}
                   className="gap-2"
                 >
-                  <LayoutDashboard className="h-4 w-4" />
+                  <CircleCheckBig className="h-4 w-4" />
                   Verifications
                 </Button>
               ) : (
@@ -96,13 +111,13 @@ export function Header() {
               >
                 Login
               </Button>
-              <Button
+              {/* <Button
                 size="sm"
                 onClick={() => navigate("/auth/signup")}
                 className="bg-gradient-to-r from-primary to-primary-light"
               >
                 Sign Up
-              </Button>
+              </Button> */}
             </>
           )}
         </div>

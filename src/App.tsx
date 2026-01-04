@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import MapPage from "./pages/MapPage";
+import Vouchers from "./pages/Vouchers";
 
 const queryClient = new QueryClient();
 
@@ -24,10 +25,46 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/" element={<Landing />} />
-            <Route path="/auth/login" element={<ProtectedRoute requireAuth={false}><Login /></ProtectedRoute>} />
-            <Route path="/auth/signup" element={<ProtectedRoute requireAuth={false}><Signup /></ProtectedRoute>} />
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+            <Route
+              path="/auth/login"
+              element={
+                <ProtectedRoute requireAuth={false}>
+                  <Login />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/auth/signup"
+              element={
+                <ProtectedRoute requireAuth={false}>
+                  <Signup />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/vouchers"
+              element={
+                <ProtectedRoute>
+                  <Vouchers />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/locations" element={<MapPage />} />
             <Route path="/about" element={<Landing />} />
             <Route path="*" element={<NotFound />} />
