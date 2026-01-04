@@ -30,18 +30,22 @@ export function Header() {
     <header
       className="shadow-md"
       style={{
-        background: "linear-gradient(90deg, #99bf99 0%, #8fb78f 100%)",
+        backgroundImage: "url('/src/assets/navbar.png')",
+        backgroundRepeat: "no-repeat",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
         borderBottom: "2px solid #28536B",
+        overflow: "hidden",
       }}
     >
       <nav className="container mx-auto flex items-center justify-between py-4 px-6">
         {/* Logo */}
         <div
-          className="text-3xl font-bold eb-garamond-headline"
+          className="text-3xl font-bold"
           style={{
-            color: "#28536B",
-            fontFamily: "EB Garamond, serif",
-            fontWeight: 700,
+            color: "#E7F5DC",
+            fontFamily: "Barabara, serif",
+            fontWeight: 900,
           }}
         >
           ECHO
@@ -66,7 +70,16 @@ export function Header() {
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate("/dashboard")}
-                className="gap-2"
+                className="gap-2 from-primary to-primary-light"
+                style={{ color: "#fff", background: "none", boxShadow: "none" }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.background = "none";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.background = "none";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
               >
                 <LayoutDashboard className="h-4 w-4" />
                 Submissions
@@ -125,7 +138,8 @@ export function Header() {
 
         {/* Mobile Menu Button */}
         <button
-          className="md:hidden p-2"
+          className="block py-2 text-sm font-medium transition-colors"
+          style={{ color: "#fff" }}
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Toggle menu"
         >
