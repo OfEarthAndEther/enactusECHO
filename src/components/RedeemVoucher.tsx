@@ -7,10 +7,11 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { tablesDB } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Slider } from "@/components/ui/slider";
+import { Operator, Query } from "appwrite";
 
 interface RedeemVoucherDialogProps {
   voucher: any;
@@ -34,70 +35,63 @@ export function RedeemVoucherDialog({
     setLoading(true);
 
     try {
-      const { data: purchaser, error: profileError } = await supabase
-        .from("profiles")
-        .select("id, points_total")
-        .eq("id", user.id)
-        .single();
-      if (profileError) throw profileError;
+      const purchaser = await tablesDB.getRow({
+        databaseId: "68b425c600306430be1c",
+        tableId: "profiles",
+        rowId: user.$id,
+        queries: [Query.select(["$id", "points_total"])],
+      });
 
       if (purchaser.points_total < voucher.points * amountPurchased) {
         throw new Error("Insufficient points");
       }
       if (voucher.quantity > amountPurchased) {
-        const { error } = await supabase
-          .from("vouchers")
-          .update({
-            quantity: voucher.quantity - amountPurchased,
-          })
-          .eq("id", voucher.id);
-        if (error) throw error;
+        await tablesDB.updateRow({
+          databaseId: "68b425c600306430be1c",
+          tableId: "vouchers",
+          rowId: voucher.$id,
+          data: { quantity: voucher.quantity - amountPurchased },
+        });
       } else {
-        const { error } = await supabase
-          .from("vouchers")
-          .delete()
-          .eq("id", voucher.id);
-        if (error) throw error;
+        const res = await tablesDB.deleteRow({
+          databaseId: "68b425c600306430be1c",
+          tableId: "vouchers",
+          rowId: voucher.$id,
+        });
       }
 
-      const { data: codes, error: codeError } = await supabase
-        .from("availableCodes")
-        .select("*")
-        .eq("voucher_name", voucher.name)
-        .limit(amountPurchased);
-      if (codeError) throw codeError;
-      console.log(codes);
-
-      const { error: deleteCodeError } = await supabase
-        .from("availableCodes")
-        .delete()
-        .in(
-          "code",
-          codes.map((code) => {
-            return code.code;
-          })
-        )
-        .eq("voucher_name", voucher.name);
-      if (deleteCodeError) throw deleteCodeError;
-
-      const { error: updatePointError } = await supabase
-        .from("profiles")
-        .update({
+      const { rows: codes } = await tablesDB.listRows({
+        databaseId: "68b425c600306430be1c",
+        tableId: "availableCodes",
+        queries: [
+          Query.select(["$id"]),
+          Query.equal("name", voucher.name),
+          Query.isNull("user_id"),
+          Query.limit(amountPurchased),
+        ],
+      });
+      codes.forEach(async (element) => {
+        await tablesDB.updateRow({
+          databaseId: "68b425c600306430be1c",
+          tableId: "availableCodes",
+          rowId: element.$id,
+          data: { user_id: user.$id },
+        });
+      });
+      await tablesDB.updateRow({
+        databaseId: "68b425c600306430be1c",
+        tableId: "profiles",
+        rowId: user.$id,
+        data: {
           points_total:
             purchaser.points_total - voucher.points * amountPurchased,
-        })
-        .eq("id", user.id);
-
-      const { error: redeemError } = await supabase.from("redeemed").insert(
-        codes.map((code) => {
-          return {
-            ...code,
-            user_id: user.id,
-            description: voucher.description,
-          };
-        })
-      );
-      if (redeemError) throw redeemError;
+          redeemed_codes: Operator.arrayAppend(
+            codes.map((code) => {
+              return code.$id;
+            }),
+          ),
+        },
+      });
       toast.success(`Voucher purchased`);
       onSuccess();
       onOpenChange(false);
@@ -105,7 +99,6 @@ export function RedeemVoucherDialog({
       toast.error(error.message || "Failed to redeem voucher");
     } finally {
       setLoading(false);
-      console.log(amountPurchased);
     }
   };
 
@@ -139,6 +132,7 @@ export function RedeemVoucherDialog({
                 value={[amountPurchased]}
                 max={voucher.quantity}
                 step={1}
+                className="pt-4"
                 onValueChange={([newValue]) => setAmountPurchased(newValue)}
               />
             </div>

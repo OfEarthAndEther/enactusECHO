@@ -33,7 +33,7 @@ const MapPage: React.FC = () => {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <Marker position={[28.613204342915626, 77.03365839281985]}>
-          <Popup>North  gate</Popup>
+          <Popup>North gate</Popup>
         </Marker>
         <Marker position={[28.61008378503705, 77.03802639739708]}>
           <Popup>Central Fountain</Popup>

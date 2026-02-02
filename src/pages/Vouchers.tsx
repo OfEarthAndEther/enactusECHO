@@ -3,10 +3,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
 import { RedeemVoucherDialog } from "@/components/RedeemVoucher";
 import {
   Table,
@@ -16,52 +16,63 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { FileText } from "lucide-react";
+import { FileText, RedoDot } from "lucide-react";
+import { tablesDB } from "@/integrations/supabase/client";
+import { Query } from "appwrite";
 export default function Vouchers() {
   const { user } = useAuth();
   const [vouchers, setVouchers] = useState([]);
-  const [userVoucher, setUserVouchers] = useState([]);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [voucherDialog, setVoucherDialog] = useState(null);
-
-  useEffect(() => {
-    fetchVouchers();
-  }, [user]);
+  const [nameDescription, setNameDescription] = useState<Map<
+    string,
+    string
+  > | null>(null);
 
   const fetchVouchers = async () => {
     if (!user) return;
-
     try {
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
+      const profileData = await tablesDB.getRow({
+        databaseId: "68b425c600306430be1c",
+        tableId: "profiles",
+        rowId: user.$id,
+      });
+      if (profileData.redeemed_codes[0]) {
+        const { rows: redeemed } = await tablesDB.listRows({
+          databaseId: "68b425c600306430be1c",
+          tableId: "availableCodes",
+          queries: [
+            Query.equal("$id", profileData.redeemed_codes),
+            Query.select(["name", "code", "valid_till"]),
+          ],
+          total: false,
+        });
+        profileData.redeemed_codes = redeemed;
+      }
 
-      if (profileError) throw profileError;
+      const { rows: voucherRows } = await tablesDB.listRows({
+        databaseId: "68b425c600306430be1c",
+        tableId: "vouchers",
+        total: false,
+      });
+      const newMap = new Map();
+      voucherRows.forEach((element) => {
+        newMap.set(element.name, element.description);
+      });
       setProfile(profileData);
-
-      const { data: voucherRows, error: voucherError } = await supabase
-        .from("vouchers")
-        .select("*");
-
-      if (voucherError) throw voucherError;
+      console.log(profileData);
+      setNameDescription(newMap);
       setVouchers(voucherRows);
-
-      const { data: reedemed, error: redeemedError } = await supabase
-        .from("redeemed")
-        .select("*")
-        .eq("user_id", user.id);
-
-      if (redeemedError) throw redeemedError;
-      setUserVouchers(reedemed);
     } catch (error: any) {
       toast.error("Failed to fetch vouchers");
     } finally {
       setLoading(false);
     }
   };
+  useEffect(() => {
+    fetchVouchers();
+  }, [user]);
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -76,7 +87,7 @@ export default function Vouchers() {
       <main className="flex-1 container px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">
-            Welcome back, {profile?.full_name}!
+            Welcome back, {profile.full_name}!
           </h1>
           <p className="text-muted-foreground">Redeem your vouchers here</p>
         </div>
@@ -86,9 +97,7 @@ export default function Vouchers() {
               <p>Available Vouchers</p>
               <p className="">
                 Your points:{" "}
-                <div className="text-primary inline">
-                  {profile.points_total}
-                </div>
+                <p className="text-primary inline">{profile?.points_total}</p>
               </p>
             </CardTitle>
           </CardHeader>
@@ -105,7 +114,7 @@ export default function Vouchers() {
                     <ScrollArea
                       type="always"
                       style={
-                        vouchers.length > 4
+                        vouchers.length >= 4
                           ? { height: "40vh" }
                           : { height: "15vh" }
                       }
@@ -117,7 +126,7 @@ export default function Vouchers() {
                         <TableHead />
                       </TableRow>
                       {vouchers.map((voucher) => (
-                        <TableRow key={voucher.id}>
+                        <TableRow key={voucher.$id}>
                           <TableCell>{voucher.name}</TableCell>
                           <TableCell>{voucher.description}</TableCell>
                           <TableCell>{voucher.quantity}</TableCell>
@@ -145,7 +154,7 @@ export default function Vouchers() {
             <CardTitle>Redeemed Vouchers</CardTitle>
           </CardHeader>
           <CardContent>
-            {userVoucher.length === 0 ? (
+            {profile.redeemed_codes[0] == null ? (
               <div className="text-center py-12 text-muted-foreground">
                 <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p>No vouchers redeemed.</p>
@@ -157,7 +166,7 @@ export default function Vouchers() {
                     <ScrollArea
                       type="always"
                       style={
-                        userVoucher.length > 4
+                        [profile.redeemed_codes].length > 4
                           ? { height: "40vh" }
                           : { height: "15vh" }
                       }
@@ -168,12 +177,19 @@ export default function Vouchers() {
                         <TableHead>Code</TableHead>
                         <TableHead>Valid Till</TableHead>
                       </TableRow>
-                      {userVoucher.map((voucher) => (
-                        <TableRow key={voucher.id}>
-                          <TableCell>{voucher.voucher_name}</TableCell>
-                          <TableCell>{voucher.description}</TableCell>
+                      {profile.redeemed_codes.map((voucher) => (
+                        <TableRow key={voucher.$id}>
+                          <TableCell>{voucher.name}</TableCell>
+                          <TableCell>
+                            {nameDescription.get(voucher.name)}
+                          </TableCell>
                           <TableCell>{voucher.code}</TableCell>
-                          <TableCell>{voucher.valid_till}</TableCell>
+                          <TableCell>
+                            {format(
+                              new Date(voucher.valid_till),
+                              "MMM dd, yyyy",
+                            )}
+                          </TableCell>
                         </TableRow>
                       ))}
                     </ScrollArea>

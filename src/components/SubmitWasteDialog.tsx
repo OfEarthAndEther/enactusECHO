@@ -17,11 +17,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { calculatePoints } from "@/utils/pointsCalculator";
 import { Award } from "lucide-react";
+import { tablesDB } from "@/integrations/supabase/client";
+import { ID } from "appwrite";
+import { Operator } from "appwrite";
 
 interface SubmitWasteDialogProps {
   open: boolean;
@@ -44,7 +46,7 @@ export function SubmitWasteDialog({
     wasteType: "",
     quantity: "",
     unit: "kg",
-    binId: "",
+    binName: "",
     bagNumber: "",
     notes: "",
   });
@@ -62,7 +64,7 @@ export function SubmitWasteDialog({
       const points = calculatePoints(
         formData.wasteType as any,
         parseFloat(formData.quantity),
-        formData.unit as "kg" | "units"
+        formData.unit as "kg" | "units",
       );
       setEstimatedPoints(points);
     } else {
@@ -71,8 +73,11 @@ export function SubmitWasteDialog({
   }, [formData.wasteType, formData.quantity, formData.unit]);
 
   const fetchBins = async () => {
-    const { data, error } = await supabase.from("bins").select("*");
-    if (!error && data) setBins(data);
+    const { rows: data } = await tablesDB.listRows({
+      databaseId: "68b425c600306430be1c",
+      tableId: "bins",
+    });
+    if (data) setBins(data);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -81,23 +86,30 @@ export function SubmitWasteDialog({
 
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("submissions")
-        .insert({
-          user_id: user.id,
+      const { $id: submissionId } = await tablesDB.createRow({
+        databaseId: "68b425c600306430be1c",
+        tableId: "submissions",
+        rowId: ID.unique(),
+        data: {
           waste_type: formData.wasteType as any,
           quantity: parseFloat(formData.quantity),
           unit: formData.unit,
-          bin_id: formData.binId ? parseInt(formData.binId) : null,
-          bag_number: formData.bagNumber,
+          bin: formData.binName,
+          user_name: user.name,
+          user_id: user.$id,
+          bag_number: Number(formData.bagNumber),
           notes: formData.notes,
           points_earned: estimatedPoints,
-          verification_status: "pending" as any,
-        })
-        .select("*");
-      setGarbageCode(data[0].id.slice(0, 8));
-
-      if (error) throw error;
+        },
+      });
+      await tablesDB.updateRow({
+        databaseId: "68b425c600306430be1c",
+        tableId: "profiles",
+        rowId: user.$id,
+        data: { submitted_garbage: Operator.arrayAppend([submissionId]) },
+      });
+      console.log(submissionId);
+      setGarbageCode(submissionId.slice(0, 8));
 
       toast.success("E-waste submission recorded! Pending verification.");
       onSuccess();
@@ -109,7 +121,7 @@ export function SubmitWasteDialog({
         wasteType: "",
         quantity: "",
         unit: "kg",
-        binId: "",
+        binName: "",
         bagNumber: "",
         notes: "",
       });
@@ -195,11 +207,11 @@ export function SubmitWasteDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="binId">Bin Location</Label>
+              <Label htmlFor="binName">Bin Location</Label>
               <Select
-                value={formData.binId}
+                value={formData.binName}
                 onValueChange={(value) =>
-                  setFormData({ ...formData, binId: value })
+                  setFormData({ ...formData, binName: value })
                 }
               >
                 <SelectTrigger>
@@ -207,7 +219,7 @@ export function SubmitWasteDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {bins.map((bin) => (
-                    <SelectItem key={bin.id} value={bin.id.toString()}>
+                    <SelectItem key={bin.$id} value={bin.name}>
                       {bin.name}
                     </SelectItem>
                   ))}

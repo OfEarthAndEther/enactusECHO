@@ -9,7 +9,6 @@ import {
   MapPin,
   TrendingUp,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -17,6 +16,8 @@ import { useEffect } from "react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { account, tablesDB } from "@/integrations/supabase/client";
+import { Query } from "appwrite";
 
 export default function Landing() {
   const { user } = useAuth();
@@ -28,35 +29,20 @@ export default function Landing() {
     if (user) {
       try {
         setLoading(true);
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .single();
-        if (error) throw error;
-        if (data.full_name == "") {
-          const newName =
-            data.email.split(".")[0][0].toUpperCase() +
-            data.email.split(".")[0].slice(1);
-
-          const { error } = await supabase
-            .from("profiles")
-            .update({
-              full_name: newName,
-            })
-            .eq("id", user.id);
-          if (error) throw error;
-
-          const { error: authUpdateError } = await supabase.auth.updateUser({
-            data: {
-              display_name: newName,
-            },
-          });
-          if (authUpdateError) throw authUpdateError;
-          console.log(newName);
+        const data = await tablesDB.getRow({
+          databaseId: "68b425c600306430be1c",
+          tableId: "profiles",
+          rowId: user.$id,
+        });
+        if (user.name == "") {
+          await account.updateName(data.full_name);
         }
-      } catch (error: any) {
-        toast.error(error.message || "Failed to update name");
+      } catch (error) {
+        if (error.name == 401) {
+          throw error;
+        } else {
+          toast.error(error.message || "Failed to update name");
+        }
       } finally {
         setLoading(false);
       }

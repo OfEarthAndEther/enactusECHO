@@ -7,12 +7,12 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Landing from "./pages/Landing";
 import Login from "./pages/auth/Login";
-import Signup from "./pages/auth/Signup";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import MapPage from "./pages/MapPage";
 import Vouchers from "./pages/Vouchers";
+import Verify from "./components/VerifyUser";
 
 const queryClient = new QueryClient();
 
@@ -34,10 +34,10 @@ const App = () => (
               }
             />
             <Route
-              path="/auth/signup"
+              path="/verify"
               element={
                 <ProtectedRoute requireAuth={false}>
-                  <Signup />
+                  <Verify />
                 </ProtectedRoute>
               }
             />

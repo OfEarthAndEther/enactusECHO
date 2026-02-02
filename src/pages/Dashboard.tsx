@@ -8,23 +8,23 @@ import {
   TableBody,
   TableCell,
   TableHead,
-  TableHeader,
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Trophy, FileText, CheckCircle, Plus, Download } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SubmitWasteDialog } from "@/components/SubmitWasteDialog";
 import { getWasteTypeLabel } from "@/utils/pointsCalculator";
 import { useNavigate } from "react-router-dom";
 import Papa from "papaparse";
 import { format } from "date-fns";
+import { tablesDB } from "@/integrations/supabase/client";
+import { Query } from "appwrite";
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, loading: contextLoading } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const navigate = useNavigate();
   const [submissions, setSubmissions] = useState<any[]>([]);
@@ -34,34 +34,26 @@ export default function Dashboard() {
   useEffect(() => {
     fetchDashboardData();
   }, [user]);
-
   const fetchDashboardData = async () => {
-    if (!user) return;
-
     try {
       // Fetch profile
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-
-      if (profileError) throw profileError;
+      const profileData = await tablesDB.getRow({
+        databaseId: "68b425c600306430be1c",
+        tableId: "profiles",
+        rowId: user.$id,
+      });
       setProfile(profileData);
 
       // Fetch submissions
-      const { data: submissionsData, error: submissionsError } = await supabase
-        .from("submissions")
-        .select(
-          `
-          *,
-          bins (name)
-        `
-        )
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-
-      if (submissionsError) throw submissionsError;
+      const { rows: submissionsData } = await tablesDB.listRows({
+        databaseId: "68b425c600306430be1c",
+        tableId: "submissions",
+        queries: [
+          Query.orderDesc("$createdAt"),
+          Query.equal("user_id", user.$id),
+        ],
+        total: false,
+      });
       setSubmissions(submissionsData || []);
     } catch (error: any) {
       toast.error("Failed to load dashboard data");
@@ -101,10 +93,10 @@ export default function Dashboard() {
   };
 
   const verifiedCount = submissions.filter(
-    (s) => s.verification_status === "verified"
+    (s) => s.verification_status === "verified",
   ).length;
 
-  if (loading) {
+  if (loading || contextLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
@@ -233,11 +225,11 @@ export default function Dashboard() {
                         <TableHead>Status</TableHead>
                       </TableRow>
                       {submissions.map((submission) => (
-                        <TableRow key={submission.id}>
+                        <TableRow key={submission.$id}>
                           <TableCell>
                             {format(
-                              new Date(submission.created_at),
-                              "MMM dd, yyyy"
+                              new Date(submission.$createdAt),
+                              "MMM dd, yyyy",
                             )}
                           </TableCell>
                           <TableCell>
@@ -246,9 +238,7 @@ export default function Dashboard() {
                           <TableCell>
                             {submission.quantity} {submission.unit}
                           </TableCell>
-                          <TableCell>
-                            {submission.bins?.name || "N/A"}
-                          </TableCell>
+                          <TableCell>{submission.bin || "N/A"}</TableCell>
                           <TableCell className="font-semibold">
                             {submission.points_earned}
                           </TableCell>

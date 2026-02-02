@@ -10,21 +10,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { useUserRole } from "@/hooks/useUserRole";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { CheckCircle, XCircle, Clock, FileText } from "lucide-react";
 import { getWasteTypeLabel } from "@/utils/pointsCalculator";
 import { format } from "date-fns";
 import { VerifySubmissionDialog } from "@/components/VerifySubmissionDialog";
 import { Navigate } from "react-router-dom";
-
+import { tablesDB } from "@/integrations/supabase/client";
+import { Query } from "appwrite";
+import { useUserRole } from "@/hooks/useUserRole";
 export default function AdminDashboard() {
   const { user } = useAuth();
-  const { isAdmin, loading: roleLoading } = useUserRole();
   const [pendingSubmissions, setPendingSubmissions] = useState<any[]>([]);
   const [stats, setStats] = useState({
     total: 0,
@@ -33,22 +31,24 @@ export default function AdminDashboard() {
     rejected: 0,
   });
   const [loading, setLoading] = useState(true);
+  const { isAdmin, loading: roleLoading } = useUserRole();
   const [selectedSubmission, setSelectedSubmission] = useState<any>(null);
 
   useEffect(() => {
     if (!roleLoading && isAdmin) {
       fetchAdminData();
     }
-  }, [isAdmin, roleLoading]);
+  }, [isAdmin]);
 
   const fetchAdminData = async () => {
     try {
       // Fetch all submissions for stats
-      const { data: allSubmissions, error: allError } = await supabase
-        .from("submissions")
-        .select("verification_status");
-
-      if (allError) throw allError;
+      const { rows: allSubmissions } = await tablesDB.listRows({
+        databaseId: "68b425c600306430be1c",
+        tableId: "submissions",
+        queries: [Query.select(["verification_status"])],
+        total: false,
+      });
 
       const stats = {
         total: allSubmissions?.length || 0,
@@ -65,19 +65,15 @@ export default function AdminDashboard() {
       setStats(stats);
 
       // Fetch pending submissions with user details
-      const { data: pending, error: pendingError } = await supabase
-        .from("submissions")
-        .select(
-          `
-          *,
-          bins (name),
-          profiles (full_name, college_id)
-        `
-        )
-        .eq("verification_status", "pending")
-        .order("created_at", { ascending: true });
-
-      if (pendingError) throw pendingError;
+      const { rows: pending } = await tablesDB.listRows({
+        databaseId: "68b425c600306430be1c",
+        tableId: "submissions",
+        queries: [
+          Query.equal("verification_status", "pending"),
+          Query.notEqual("user_id", user.$id),
+          Query.orderDesc("$createdAt"),
+        ],
+      });
       setPendingSubmissions(pending || []);
     } catch (error: any) {
       toast.error("Failed to load admin data");
@@ -86,7 +82,7 @@ export default function AdminDashboard() {
     }
   };
 
-  if (roleLoading || loading) {
+  if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
@@ -188,47 +184,39 @@ export default function AdminDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {pendingSubmissions
-                      .filter((submissions) => {
-                        return user.id != submissions.user_id;
-                      })
-                      .map((submission) => (
-                        <TableRow key={submission.id}>
-                          <TableCell>
-                            {format(
-                              new Date(submission.created_at),
-                              "MMM dd, yyyy"
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {submission.profiles?.full_name}
-                          </TableCell>
-                          <TableCell className="font-mono text-xs">
-                            {submission.profiles?.college_id}
-                          </TableCell>
-                          <TableCell>
-                            {getWasteTypeLabel(submission.waste_type)}
-                          </TableCell>
-                          <TableCell>
-                            {submission.quantity} {submission.unit}
-                          </TableCell>
-                          <TableCell>
-                            {submission.bins?.name || "N/A"}
-                          </TableCell>
-                          <TableCell className="font-semibold">
-                            {submission.points_earned}
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setSelectedSubmission(submission)}
-                            >
-                              Review
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                    {pendingSubmissions.map((submission) => (
+                      <TableRow key={submission.$id}>
+                        <TableCell>
+                          {format(
+                            new Date(submission.$createdAt),
+                            "MMM dd, yyyy",
+                          )}
+                        </TableCell>
+                        <TableCell>{submission.user_name}</TableCell>
+                        <TableCell className="font-mono text-xs">
+                          {submission?.college_id}
+                        </TableCell>
+                        <TableCell>
+                          {getWasteTypeLabel(submission.waste_type)}
+                        </TableCell>
+                        <TableCell>
+                          {submission.quantity} {submission.unit}
+                        </TableCell>
+                        <TableCell>{submission.bin || "N/A"}</TableCell>
+                        <TableCell className="font-semibold">
+                          {submission.points_earned}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setSelectedSubmission(submission)}
+                          >
+                            Review
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
               </div>

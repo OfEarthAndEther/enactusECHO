@@ -16,7 +16,6 @@ export function Header() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { isAdmin, loading: roleLoading } = useUserRole();
-
   const handleSignOut = async () => {
     await signOut();
     setMobileMenuOpen(false);
@@ -165,12 +164,24 @@ export function Header() {
                   <LayoutDashboard className="h-4 w-4" />
                   Submissions
                 </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    navigate("/vouchers");
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full justify-start gap-2"
+                >
+                  <LayoutDashboard className="h-4 w-4" />
+                  Voucher
+                </Button>
                 {isAdmin ? (
                   <Button
                     variant="secondary"
                     size="sm"
                     onClick={() => {
-                      navigate("/dashboard");
+                      navigate("/admin");
                       setMobileMenuOpen(false);
                     }}
                     className="w-full justify-start gap-2"
@@ -203,16 +214,6 @@ export function Header() {
                   className="w-full"
                 >
                   Login
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    navigate("/auth/signup");
-                    setMobileMenuOpen(false);
-                  }}
-                  className="w-full bg-gradient-to-r from-primary to-primary-light"
-                >
-                  Sign Up
                 </Button>
               </>
             )}

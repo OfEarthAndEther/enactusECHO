@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-
 type UserRole = "normal" | "admin" | "superadmin";
 
 export function useUserRole() {
@@ -17,24 +15,24 @@ export function useUserRole() {
       return;
     }
 
-    const fetchRole = async () => {
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("user_id, role")
-        .eq("user_id", user.id)
-        .single();
-
-      if (!error && data) {
-        setRole(data.role as UserRole);
-      } else {
-        setRole("normal");
-      }
-      setAdminID(data.user_id);
-      setLoading(false);
-    };
-
     fetchRole();
   }, [user]);
+  const fetchRole = async () => {
+    // const { data, error } = await supabase
+    //   .from("user_roles")
+    //   .select("user_id, role")
+    //   .eq("user_id", user.id)
+    //   .single();
+    try {
+      if (user.labels[0] == "admin") {
+        setRole(user.labels[0] as UserRole);
+      }
+    } catch (error) {
+      setRole("normal");
+    }
+    setAdminID(user.$id);
+    setLoading(false);
+  };
 
   return {
     adminID,

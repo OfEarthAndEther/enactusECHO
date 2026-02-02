@@ -8,10 +8,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { getWasteTypeLabel } from "@/utils/pointsCalculator";
+import { tablesDB } from "@/integrations/supabase/client";
+import { Operator, Query } from "appwrite";
 
 interface VerifySubmissionDialogProps {
   submission: any;
@@ -37,35 +38,47 @@ export function VerifySubmissionDialog({
 
     try {
       if (status == "verified") {
-        const { data, error: fetchError } = await supabase
-          .from("submissions")
-          .select("id")
-          .eq("id", submission.id);
-        if (data[0].id.slice(0, 8) == code) {
-          const { error } = await supabase
-            .from("submissions")
-            .update({
+        const data = await tablesDB.getRow({
+          databaseId: "68b425c600306430be1c",
+          tableId: "submissions",
+          queries: [Query.select(["$id"])],
+          rowId: submission.$id,
+        });
+        if (data.$id.slice(0, 8) == code) {
+          await tablesDB.updateRow({
+            databaseId: "68b425c600306430be1c",
+            tableId: "submissions",
+            rowId: submission.$id,
+            data: {
               verification_status: status,
-              verified_by: user.id,
-              verified_at: new Date().toISOString(),
-              verification_comment: comment || null,
-            })
-            .eq("id", submission.id);
-          if (error) throw error;
+              verified_at: new Date(),
+              verified_by: user.$id,
+              verification_comment: comment || "NA",
+            },
+          });
+          await tablesDB.updateRow({
+            databaseId: "68b425c600306430be1c",
+            tableId: "profiles",
+            rowId: submission.user_id,
+            data: {
+              points_total: Operator.increment(submission.points_earned),
+            },
+          });
         } else {
-          throw fetchError;
+          throw new Error("Invalid code");
         }
       } else {
-        const { error } = await supabase
-          .from("submissions")
-          .update({
+        await tablesDB.updateRow({
+          databaseId: "68b425c600306430be1c",
+          tableId: "submissions",
+          rowId: submission.$id,
+          data: {
             verification_status: status,
-            verified_by: user.id,
-            verified_at: new Date().toISOString(),
-            verification_comment: comment || null,
-          })
-          .eq("id", submission.id);
-        if (error) throw error;
+            verified_at: new Date(),
+            verified_by: user.$id,
+            verification_comment: comment || "NA",
+          },
+        });
       }
       toast.success(`Submission ${status}`);
       onSuccess();
@@ -88,12 +101,12 @@ export function VerifySubmissionDialog({
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <p className="text-muted-foreground">Student</p>
-              <p className="font-medium">{submission.profiles?.full_name}</p>
+              <p className="font-medium">{submission.user_id?.full_name}</p>
             </div>
             <div>
               <p className="text-muted-foreground">College ID</p>
               <p className="font-mono text-xs">
-                {submission.profiles?.college_id}
+                {submission.user_id?.college_id}
               </p>
             </div>
             <div>

@@ -11,74 +11,37 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Leaf } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { account } from "../../integrations/supabase/client.ts";
 import { toast } from "sonner";
+import { ID } from "appwrite";
 
 export default function Login() {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [loadingEmail, setLoadingEmail] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
-  const exampleEmailList = [
-    "example.nsut@nsut.ac.in",
-    "example.user@nsut.ac.in",
-    "example.super@nsut.ac.in",
-  ];
 
-  const handlePasswordSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      if (
-        !/^[A-Za-z]+(\.[A-Za-z]+)*\.ug\d{2}@nsut\.ac\.in$/.test(
-          formData.email
-        ) &&
-        !exampleEmailList.includes(formData.email)
-      ) {
-        throw new Error("Enter valid NSUT email id");
-      }
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      });
-
-      if (error) throw error;
-
-      if (data.user) {
-        toast.success("Welcome back!");
-        navigate("/dashboard");
-      }
-    } catch (error: any) {
-      toast.error(error.message || "Failed to login");
-    } finally {
-      setLoading(false);
-    }
-  };
   const handleMagicLinkSubmit = async () => {
     try {
       if (
         !/^[A-Za-z]+(\.[A-Za-z]+)*\.ug\d{2}@nsut\.ac\.in$/.test(
-          formData.email
+          formData.email,
         ) &&
-        formData.email != "example.nsut@nsut.ac.in"
+        formData.email != "jojot3750@gmail.com"
       ) {
         throw new Error("Enter valid NSUT email id");
       }
-      setLoadingEmail(true);
-      const { error } = await supabase.auth.signInWithOtp({
-        email: formData.email,
-        options: {
-          emailRedirectTo: "",
-        },
-      });
-      if (error) throw error;
+      setLoading(true);
+      await account.createMagicURLToken(
+        ID.unique(),
+        formData.email,
+        "http://localhost:5173/verify",
+      );
     } catch (error: any) {
       toast.error(error.message || "Failed to send email");
     } finally {
-      setLoadingEmail(false);
+      setLoading(false);
       toast.success("Please check your email");
     }
   };
@@ -96,7 +59,7 @@ export default function Login() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handlePasswordSubmit} className="space-y-4">
+          <form className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -110,34 +73,13 @@ export default function Login() {
                 required
               />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
-                required
-              />
-            </div>
-
-            <Button
-              type="submit"
-              className="w-full bg-gradient-to-r from-primary to-primary-light"
-              disabled={loadingEmail || loading}
-            >
-              {loading ? "Signing in..." : "Sign In"}
-            </Button>
             <Button
               type="button"
               className="w-full bg-gradient-to-r from-primary to-primary-light"
-              disabled={loadingEmail || loading}
+              disabled={loading}
               onClick={handleMagicLinkSubmit}
             >
-              {loadingEmail ? "Sending..." : "Use Email Only"}
+              {loading ? "Sending..." : "Sign In"}
             </Button>
           </form>
 
