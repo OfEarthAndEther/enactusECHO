@@ -36,7 +36,7 @@ export default function Login() {
       await account.createMagicURLToken(
         ID.unique(),
         formData.email,
-        "http://localhost:5173/verify",
+        "https://enactus-echo.vercel.app/",
       );
     } catch (error: any) {
       toast.error(error.message || "Failed to send email");
