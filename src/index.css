@@ -1,0 +1,125 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Updated eco-friendly color palette */
+    --background: 97 56% 90%; /* #E7F5DC beige */
+    --foreground: 180 100% 14%; /* #004643 dark green */
+
+    --primary: 160 84% 39%;
+    --primary-light: 160 74% 55%;
+    --primary-glow: 160 90% 70%;
+
+    --secondary: 90 30% 75%; /* #B6C99C */
+    --accent: 90 40% 85%; /* #CFE1B9 */
+    --destructive: 30 50% 12%; /* #291C0E dark brown */
+    --border: 90 30% 75%;
+    --input: 90 30% 75%;
+    --card: 97 56% 90%;
+    --card-foreground: 180 100% 14%;
+    --popover: 97 56% 90%;
+    --popover-foreground: 180 100% 14%;
+    --muted: 90 40% 85%;
+    --muted-foreground: 180 100% 14%;
+    --accent-foreground: 180 100% 14%;
+    --radius: 0.75rem;
+    --gradient-eco: linear-gradient(135deg, hsl(90 30% 75%), hsl(90 40% 85%));
+    --gradient-subtle: linear-gradient(180deg, hsl(97 56% 90%), hsl(90 40% 85%));
+    --shadow-soft: 0 2px 8px -2px hsl(90 30% 75% / 0.1);
+    --shadow-medium: 0 4px 16px -4px hsl(90 30% 75% / 0.15);
+    --shadow-glow: 0 0 24px hsl(160 90% 70% / 0.25);
+  }
+
+  .dark {
+    --background: 160 20% 8%;
+    --foreground: 160 5% 95%;
+    --card: 160 15% 12%;
+    --card-foreground: 160 5% 95%;
+    --popover: 160 15% 12%;
+    --popover-foreground: 160 5% 95%;
+    --primary: 160 74% 55%;
+    --primary-light: 160 84% 65%;
+    --primary-glow: 160 90% 75%;
+    --secondary: 160 15% 18%;
+    --muted: 160 15% 18%;
+    --accent: 160 74% 55%;
+    --destructive: 0 62.8% 50%;
+    --border: 160 15% 18%;
+    --input: 160 15% 18%;
+    --ring: 160 74% 55%;
+    --success: 142 76% 45%;
+    --warning: 38 92% 60%;
+    --info: 199 89% 58%;
+    --gradient-eco: linear-gradient(135deg, hsl(160 74% 55%), hsl(160 84% 65%));
+    --gradient-subtle: linear-gradient(180deg, hsl(160 20% 8%), hsl(160 18% 12%));
+    --shadow-soft: 0 2px 8px -2px hsl(160 74% 55% / 0.2);
+    --shadow-medium: 0 4px 16px -4px hsl(160 74% 55% / 0.3);
+    --shadow-glow: 0 0 24px hsl(160 90% 75% / 0.4);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #B6C99C;
+  opacity: 1;
+}
+
+/* EB Garamond headline font */
+.eb-garamond-headline {
+  font-family: "EB Garamond", serif;
+  font-optical-sizing: auto;
+  font-weight: 700;
+  font-style: normal;
+}
+
+body {
+  background: #E7F5DC;
+  color: #004643;
+}
+
+/* Navbar link styles */
+.navbar-link {
+  color: #28536B;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+.navbar-link:hover {
+  color: #004643;
+}
+
+/* Sleek card and button styles */
+.card {
+  background: #CFE1B9;
+  border: 1px solid #B6C99C;
+  color: #004643;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(40, 83, 107, 0.08);
+}
+.button {
+  background: #B6C99C;
+  color: #291C0E;
+  border-radius: 8px;
+  font-family: "EB Garamond", serif;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.button:hover {
+  background: #291C0E;
+  color: #CFE1B9;
+}
