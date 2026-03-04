@@ -31,6 +31,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         sessionId: "current",
       });
       setSession(currSession);
+      if (userFound.name == null || userFound.name == "-") {
+        userFound.name = data[0].name;
+      }
     } catch (error) {
       setUser(null);
       setSession(null);
