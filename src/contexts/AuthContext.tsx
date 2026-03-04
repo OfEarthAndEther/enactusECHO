@@ -22,7 +22,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { rows: data } = await tablesDB.listRows({
         databaseId: "68b425c600306430be1c",
         tableId: "profiles",
-        queries: [Query.equal("email", userFound.email), Query.select(["$id"])],
+        queries: [
+          Query.equal("email", userFound.email),
+          Query.select(["$id", "name"]),
+        ],
         total: false,
       });
       userFound.$id = data[0].$id;
@@ -31,6 +34,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         sessionId: "current",
       });
       setSession(currSession);
+      if (userFound.name == null || userFound.name == "-") {
+        userFound.name = data[0].name;
+      }
     } catch (error) {
       setUser(null);
       setSession(null);
